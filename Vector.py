@@ -1,11 +1,16 @@
-from math import sqrt, acos, pi
+from math import factorial, sqrt, acos, pi
 from decimal import Decimal, getcontext
 
 getcontext().prec = 30
 
 
 class Vector:
-    
+    # Parallel vectors are one vector time scalar equals another vector
+    # Othogonal vectors are v1 times v2 = zero vector implies one of the vectors
+    # is the zero vector or they are at right angle to each other
+
+    # Zero vector is parallel and orthogonal to all vectors and only vector orthogonal to itself
+
     CANNOT_NORMALIZE_ZERO_VECTOR_MSG = 'Cannot divide by Zero'
     
     def __init__(self, coordinates):
@@ -21,15 +26,29 @@ class Vector:
         except TypeError:
             raise TypeError('The coordinates must be an iterable')
     
+    def isOrthogonal(self, other, tolerance=1e-10):
+        return True if abs(self.dot_product(other)) < tolerance else False
+
+    def is_zero(self, tolerance=1e-10):
+        return self.magnitude() < tolerance
+
+    def isParallel(self, other):
+        return (self.is_zero() or
+                other.is_zero() or
+                self.angle(other) == 0 or
+                self.angle(other) == pi)
     def dot_product(self, other):
         return sum([x * y for (x, y) in zip(self.coordinates, other.coordinates)])
     
+    def roundCoordinates(self, places=3):
+        self.coordinates = tuple(map(lambda x: round(x, places), self.coordinates))
+
     def angle(self, other, in_radians=False):
         if in_radians == True:
             return self.angle_in_radians(other)
         else:
             return self.angle_in_degrees(other)
-    
+
     def angle_in_radians(self, other):
         norm_v = self.normalization()
         norm_w = other.normalization()
@@ -76,17 +95,19 @@ class Vector:
     def __rmul__(self, scalar):
         self.coordinates = tuple(map(lambda x: x * scalar, self.coordinates))
         return self
+
+    def __truediv__(self, other):
+        c1 = self.coordinates
+        c2 = other.coordinates
+        return tuple(map(lambda x, y: x / y, c1, c2))[0]
     
     def times_scalar(self, c):
         new_coordinates = [Decimal(c) * x for x in self.coordinates]
         return Vector(new_coordinates)
 
 if __name__ == '__main__':
-    v5 = Vector((3.183, -7.627))
-    v6 = Vector((-2.668, 5.319))
-    
-    print(v5.angle(v6, True))
-    
-    v7 = Vector((7.35, 0.221, 5.188))
-    v8 = Vector((2.751, 8.259, 3.985)) 
-    print(v7.angle(v8))
+    v = Vector((2.118, 4.827))
+    w = Vector((0, 0))
+
+    print(v.isOrthogonal(w))
+    print(v.isParallel(w))
